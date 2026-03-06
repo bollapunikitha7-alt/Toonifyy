@@ -1,0 +1,32 @@
+{
+  "google_105046545199630039321": {
+    "username": "BOLLAPU NIKHITHA (W)",
+    "email": "239y1a0530@ksrmce.ac.in",
+    "password": "",
+    "provider": "google",
+    "picture": "https://lh3.googleusercontent.com/a/ACg8ocLLatl1UA9VL6pNrXwT_6__ve-HRmKC2mcd2xJlHvIrhos=s96-c",
+    "created_at": 1771931338
+  },
+  "aaa": {
+    "username": "aaa",
+    "email": "chinniA@gmail.com",
+    "password": "$2b$12$rPMJ784DoidOHb3P7WdaOuy.4AJTduhV4WT5LAO6ymwmxWumYZeBa",
+    "provider": "local",
+    "created_at": 1772356091
+  },
+  "google_111577289769151570152": {
+    "username": "Bollapu Nikitha",
+    "email": "bollapunikitha7@gmail.com",
+    "password": "",
+    "provider": "google",
+    "picture": "https://lh3.googleusercontent.com/a/ACg8ocKDNZFU-p1PyhcaSn7ogAIKlQCvJ5rwaGy9FtMPnPpBIyBySg=s96-c",
+    "created_at": 1772462787
+  },
+  "aaab": {
+    "username": "aaab",
+    "email": "aaab@gmail.com",
+    "password": "$2b$12$V1tpPpZ20q3GhlnBMV0CweWbzVfFq5Hxz0XISxg.LkF1ymXdQcM..",
+    "provider": "local",
+    "created_at": 1772761433
+  }
+}
