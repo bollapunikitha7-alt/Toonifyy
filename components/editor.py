@@ -1107,39 +1107,23 @@ def show_editor():
             st.session_state.recent_filters.append(st.session_state.active_preset)
 
         # Main content area with editor
-        canvas_col, sidebar_col = st.columns([2.6, 1], gap="large")
-
-        with sidebar_col:
-            st.markdown("#### 🎨 Style Gallery")
-            for cat, presets in FILTER_CATEGORIES.items():
-                st.markdown(f"**{cat}**")
-                cols = st.columns(2)
-                for i, preset in enumerate(presets):
-                    with cols[i % 2]:
-                        active = st.session_state.active_preset == preset
-                        if st.button(preset, key=f"btn_{preset}", use_container_width=True,
-                                   type="primary" if active else "secondary"):
-                            st.session_state.active_preset = preset
-                            st.rerun()
-
-            st.markdown("---")
-            st.markdown("#### ⚙️ Fine-Tuning")
-            
-            line_w = st.slider("🖊 Line Weight", 0.0, 1.0, 0.4, 0.05)
-            color_simp = st.slider("🎨 Color Simplification", 0.0, 1.0, 0.75, 0.05)
-            detail = st.slider("🔍 Detail Preservation", 0.0, 1.0, 0.25, 0.05)
-            smooth = st.slider("✨ Smoothness", 0.0, 1.0, 0.5, 0.05)
-
-            if "uploaded_image" in st.session_state and st.session_state.uploaded_image:
-                styled = PRESET_FILTERS[st.session_state.active_preset](
-                    st.session_state.uploaded_image, line_w, smooth, detail, color_simp
-                )
-                st.session_state.styled_image = styled
-                
-                st.markdown("---")
-                st.markdown("#### 💾 Download Options")
-                
-                # Free preview download (with watermark)
+        # ================================
+        # DOWNLOAD OPTIONS ON MAIN PAGE
+        # ================================
+        
+        if "uploaded_image" in st.session_state and st.session_state.uploaded_image:
+        
+            styled = st.session_state.styled_image or PRESET_FILTERS[st.session_state.active_preset](
+                st.session_state.uploaded_image, 0.4, 0.5, 0.25, 0.75
+            )
+        
+            st.markdown("### 💾 Download Options")
+        
+            d1, d2 = st.columns(2)
+        
+            # -------- FREE DOWNLOAD --------
+            with d1:
+        
                 preview_path, preview_filename = DownloadPreparation.prepare_download(
                     image=styled,
                     user_id=st.session_state.current_user.get('username', 'guest'),
@@ -1149,61 +1133,65 @@ def show_editor():
                     quality='medium',
                     add_watermark=True
                 )
-                
+        
                 if preview_path:
-                    with open(preview_path, 'rb') as f:
+                    with open(preview_path, "rb") as f:
                         preview_bytes = f.read()
-                    
+        
                     st.download_button(
-                        "⬇ Free Preview (Watermarked)",
+                        "⬇ Free Download",
                         preview_bytes,
                         file_name=preview_filename,
                         mime="image/png",
                         use_container_width=True
                     )
-                
-                st.markdown("---")
-                st.markdown("### 💎 Premium Download")
-                st.markdown("*No watermark, high quality*")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    format_choice = st.selectbox("Format", ["PNG", "JPG", "WEBP"], key="download_format")
-                with col2:
-                    quality_choice = st.selectbox("Quality", ["high", "medium"], key="download_quality")
-                
-                # Calculate price
-                price = payment_handler.calculate_amount(1, quality_choice) / 100
-                st.markdown(f"**Price: ₹{price:.2f}**")
-                
-                if st.button("💳 Purchase & Download", use_container_width=True, type="primary"):
-                    # Prepare download for payment
+        
+            # -------- PREMIUM DOWNLOAD --------
+            with d2:
+        
+                price = payment_handler.calculate_amount(1, "high") / 100
+        
+                if st.button(f"💳 Premium Download ₹{price:.2f}", use_container_width=True):
+        
                     download_path, filename = DownloadPreparation.prepare_download(
                         image=styled,
                         user_id=st.session_state.current_user.get('username', 'guest'),
                         original_filename='premium.png',
                         style_name=st.session_state.active_preset,
-                        format=format_choice,
-                        quality=quality_choice,
+                        format="PNG",
+                        quality="high",
                         add_watermark=False
                     )
-                    
+        
                     if download_path:
                         st.session_state.download_info = {
-                            'path': download_path,
-                            'filename': filename,
-                            'style': st.session_state.active_preset,
-                            'format': format_choice
+                            "path": download_path,
+                            "filename": filename,
+                            "style": st.session_state.active_preset,
+                            "format": "PNG"
                         }
-                        st.session_state.download_quality = quality_choice
+        
+                        st.session_state.download_quality = "high"
                         st.session_state.payment_page = True
                         st.rerun()
-
+        
+        
+        # ================================
+        # MAIN LAYOUT
+        # ================================
+        
+        canvas_col, control_col = st.columns([3,1])
+        
+        # ================================
+        # IMAGE AREA (STATIC)
+        # ================================
         with canvas_col:
+        
             if "uploaded_image" not in st.session_state or not st.session_state.uploaded_image:
+        
                 st.markdown("""
                 <div style="
-                    height:500px;
+                    height:520px;
                     border:2px dashed #e0e0e0;
                     border-radius:20px;
                     display:flex;
@@ -1212,34 +1200,78 @@ def show_editor():
                     font-size:1.2rem;
                     color:#666;
                     background:#f9f9f9;
-                ">🎨 Upload a photo to get started</div>
-                """, unsafe_allow_html=True)
-            else:
-                img = st.session_state.uploaded_image
-                styled = st.session_state.styled_image or PRESET_FILTERS[st.session_state.active_preset](
-                    img, line_w, smooth, detail, color_simp
-                )
-                w, h = img.size
-                
-                # Image info bar
-                st.markdown(f"""
-                <div style="margin-bottom: 1rem; padding:0.5rem; background:#f5f5f5; border-radius:8px;">
-                    📐 {w}×{h}px | 🎨 {st.session_state.active_preset}
+                ">
+                🎨 Upload a photo to start
                 </div>
                 """, unsafe_allow_html=True)
-
-                if st.session_state.view_mode == "Split":
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        st.markdown("**ORIGINAL**")
-                        st.image(img, use_container_width=True)
-                    with c2:
-                        st.markdown(f"**{st.session_state.active_preset}**")
-                        st.image(styled, use_container_width=True)
-                else:
-                    st.image(styled, use_container_width=True)
-
+        
+            else:
+        
+                img = st.session_state.uploaded_image
+        
+                styled = PRESET_FILTERS[st.session_state.active_preset](
+                    img, 0.4, 0.5, 0.25, 0.75
+                )
+        
+                st.session_state.styled_image = styled
+        
+                st.image(styled, use_container_width=True)
+        
+        
+        # ================================
+        # CONTROLS (SCROLLABLE)
+        # ================================
+        with control_col:
+        
+            tab1, tab2 = st.tabs(["🎨 Style Gallery", "⚙️ Fine Tune"])
+        
+        
+            # -------- STYLE GALLERY --------
+            with tab1:
+        
+                for cat, presets in FILTER_CATEGORIES.items():
+        
+                    st.markdown(f"**{cat}**")
+        
+                    cols = st.columns(2)
+        
+                    for i, preset in enumerate(presets):
+        
+                        with cols[i % 2]:
+        
+                            active = st.session_state.active_preset == preset
+        
+                            if st.button(
+                                preset,
+                                key=f"btn_{preset}",
+                                use_container_width=True,
+                                type="primary" if active else "secondary"
+                            ):
+                                st.session_state.active_preset = preset
+                                st.rerun()
+        
+        
+            # -------- FINE TUNING --------
+            with tab2:
+        
+                line_w = st.slider("🖊 Line Weight", 0.0, 1.0, 0.4, 0.05)
+                color_simp = st.slider("🎨 Color Simplification", 0.0, 1.0, 0.75, 0.05)
+                detail = st.slider("🔍 Detail Preservation", 0.0, 1.0, 0.25, 0.05)
+                smooth = st.slider("✨ Smoothness", 0.0, 1.0, 0.5, 0.05)
+        
+                if "uploaded_image" in st.session_state and st.session_state.uploaded_image:
+        
+                    styled = PRESET_FILTERS[st.session_state.active_preset](
+                        st.session_state.uploaded_image,
+                        line_w,
+                        smooth,
+                        detail,
+                        color_simp
+                    )
+        
+                    st.session_state.styled_image = styled
 if __name__ == "__main__":
     # Run cleanup on startup (optional)
     DownloadPreparation.cleanup_old_files()
+
     show_editor()
